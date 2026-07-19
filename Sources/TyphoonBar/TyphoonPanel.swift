@@ -12,6 +12,7 @@ struct TyphoonPanel: View {
     let store: TyphoonStore
     @State private var mapZoomScale = 1.0
     @State private var measuredContentHeight: CGFloat = 0
+    @State private var isTyphoonPickerPresented = false
 
     private var panelHeight: CGFloat {
         let targetHeight = measuredContentHeight > 0 ? ceil(measuredContentHeight) : 520
@@ -24,6 +25,8 @@ struct TyphoonPanel: View {
             switch store.state {
             case .idle, .loading:
                 loadingView
+            case .noSelection:
+                calmView
             case .failed(let message):
                 errorView(message)
             case .loaded(let snapshot):
@@ -35,6 +38,59 @@ struct TyphoonPanel: View {
         .onPreferenceChange(PanelContentHeightKey.self) { height in
             guard height > 0, abs(height - measuredContentHeight) > 0.5 else { return }
             measuredContentHeight = height
+        }
+    }
+
+    private var calmView: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 10) {
+                Image(nsImage: .typhoonStatusIcon)
+                    .resizable()
+                    .frame(width: 28, height: 28)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("近三个月台风").font(.headline)
+                    Text("中央气象台").font(.caption).foregroundStyle(.secondary)
+                }
+                Spacer()
+                typhoonPicker
+                refreshButton
+            }
+            .padding(14)
+
+            Spacer()
+            VStack(spacing: 12) {
+                ZStack {
+                    Circle().fill(Color.green.opacity(0.12))
+                    Image(systemName: "checkmark.shield.fill")
+                        .font(.system(size: 38))
+                        .foregroundStyle(.green)
+                }
+                .frame(width: 72, height: 72)
+                Text("一切安好")
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                Text("近三个月暂无正在活动的台风")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                if !store.availableTyphoons.isEmpty {
+                    Text("你仍可从右上角选择近期历史台风查看路径")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .multilineTextAlignment(.center)
+            Spacer()
+
+            HStack {
+                Text("每 15 分钟自动检查最新台风")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button("退出") { NSApplication.shared.terminate(nil) }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(14)
+            .background(.bar)
         }
     }
 
@@ -142,7 +198,7 @@ struct TyphoonPanel: View {
                 Spacer()
                 if store.isLoadingLocalImpact {
                     ProgressView().controlSize(.small)
-                } else {
+                } else if store.isSelectedTyphoonActive {
                     Button("重试") { Task { await store.refreshLocalImpact() } }
                         .controlSize(.small)
                 }
@@ -166,28 +222,158 @@ struct TyphoonPanel: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
-                    Text("\(snapshot.name) BAVI").font(.headline)
-                    Text("实时")
+                    typhoonPicker
+                    Text(store.isSelectedTyphoonActive ? "活动" : "历史")
                         .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(.green)
+                        .foregroundStyle(store.isSelectedTyphoonActive ? Color.green : Color.secondary)
                         .padding(.horizontal, 5).padding(.vertical, 2)
-                        .background(.green.opacity(0.12), in: Capsule())
+                        .background((store.isSelectedTyphoonActive ? Color.green : Color.secondary).opacity(0.12), in: Capsule())
                 }
-                Text("第 \(snapshot.number) 号 · 中央气象台")
+                Text("\(typhoonNumber(store.selectedTyphoon?.number ?? snapshot.number)) · 中央气象台")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            Button {
-                Task { await store.refresh() }
-            } label: {
-                Image(systemName: "arrow.clockwise")
-            }
-            .buttonStyle(.borderless)
-            .help("立即刷新")
+            refreshButton
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
+    }
+
+    private var typhoonPicker: some View {
+        Button {
+            isTyphoonPickerPresented.toggle()
+        } label: {
+            HStack(spacing: 4) {
+                if let selected = store.selectedTyphoon {
+                    Text("\(selected.name) \(selected.englishName)")
+                        .font(.headline)
+                        .lineLimit(1)
+                } else {
+                    Text("选择台风").font(.callout.weight(.semibold))
+                }
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 8, weight: .bold))
+            }
+        }
+        .buttonStyle(.plain)
+        .fixedSize()
+        .disabled(store.availableTyphoons.isEmpty)
+        .help("选择近三个月台风")
+        .popover(isPresented: $isTyphoonPickerPresented, arrowEdge: .top) {
+            typhoonPickerPopover
+        }
+    }
+
+    private var typhoonPickerPopover: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text("近三个月台风")
+                    .font(.headline)
+                Text("活动台风优先，其余按最后更新时间从新到旧")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Label("\(store.catalogPlaceName) · \(store.catalogActivityMessage)", systemImage: "location.fill")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+            }
+            .padding(12)
+
+            Divider()
+
+            ScrollView(.vertical, showsIndicators: true) {
+                LazyVStack(spacing: 5) {
+                    ForEach(store.availableTyphoons) { typhoon in
+                        Button {
+                            isTyphoonPickerPresented = false
+                            Task { await store.selectTyphoon(id: typhoon.id) }
+                        } label: {
+                            HStack(spacing: 10) {
+                                VStack(alignment: .leading, spacing: 3) {
+                                    HStack(spacing: 6) {
+                                        Text(typhoon.name)
+                                            .font(.system(size: 14, weight: .semibold))
+                                        Text(typhoon.englishName)
+                                            .font(.system(size: 13))
+                                            .foregroundStyle(.secondary)
+                                        Text(typhoon.isActive ? "活动" : "已停止")
+                                            .font(.system(size: 9, weight: .bold))
+                                            .foregroundStyle(typhoon.isActive ? Color.green : Color.secondary)
+                                            .padding(.horizontal, 5)
+                                            .padding(.vertical, 2)
+                                            .background((typhoon.isActive ? Color.green : Color.secondary).opacity(0.12), in: Capsule())
+                                    }
+                                    Text("\(typhoonNumber(typhoon.number)) · 最后更新 \(formattedUpdate(typhoon.lastUpdated))")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    if let activity = typhoon.localActivity {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: activity.hasNoticeableImpact ? "location.circle.fill" : "location.slash")
+                                            Text(localActivityText(activity, typhoon: typhoon))
+                                        }
+                                        .font(.system(size: 10, weight: .medium))
+                                        .foregroundStyle(activity.hasNoticeableImpact ? Color.orange : Color.secondary)
+                                    } else {
+                                        Text("正在计算当前地区主要影响日期…")
+                                            .font(.system(size: 10))
+                                            .foregroundStyle(.tertiary)
+                                    }
+                                }
+                                Spacer()
+                                if typhoon.id == store.selectedTyphoonID {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(.blue)
+                                }
+                            }
+                            .contentShape(Rectangle())
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 8)
+                            .background(
+                                typhoon.id == store.selectedTyphoonID ? Color.accentColor.opacity(0.10) : Color.clear,
+                                in: RoundedRectangle(cornerRadius: 8)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(7)
+            }
+        }
+        .frame(width: 370, height: min(480, CGFloat(store.availableTyphoons.count) * 75 + 93))
+    }
+
+    private func formattedUpdate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "zh_CN")
+        formatter.timeZone = .current
+        formatter.dateFormat = "M月d日 HH:mm"
+        return formatter.string(from: date)
+    }
+
+    private func typhoonNumber(_ number: String) -> String {
+        number.isEmpty || number == "0" ? "未编号" : "第 \(number) 号"
+    }
+
+    private func localActivityText(_ activity: TyphoonLocalActivity, typhoon: TyphoonSummary) -> String {
+        let date = activity.date.formatted(
+            .dateTime.month(.abbreviated).day().locale(Locale(identifier: "zh_CN"))
+        )
+        let distance = Int(activity.distance.rounded())
+        if activity.hasNoticeableImpact {
+            let prefix = typhoon.isActive && activity.date > Date() ? "预计主要影响" : "主要影响"
+            return "\(prefix) \(date) · 最近约 \(distance) km"
+        }
+        return "最接近 \(date) · 约 \(distance) km，无明显影响"
+    }
+
+    private var refreshButton: some View {
+        Button {
+            Task { await store.refresh() }
+        } label: {
+            Image(systemName: "arrow.clockwise")
+        }
+        .buttonStyle(.borderless)
+        .help("立即刷新")
     }
 
     private var windLegend: some View {

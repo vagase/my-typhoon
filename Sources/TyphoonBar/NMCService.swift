@@ -3,13 +3,11 @@ import CoreLocation
 
 enum NMCServiceError: LocalizedError {
     case malformedResponse
-    case noActiveBavi
     case missingTrack
 
     var errorDescription: String? {
         switch self {
         case .malformedResponse: "中央气象台返回了无法识别的数据"
-        case .noActiveBavi: "当前未发现活动中的台风“巴威”"
         case .missingTrack: "暂时没有可用的台风路径"
         }
     }
@@ -18,6 +16,7 @@ enum NMCServiceError: LocalizedError {
 actor NMCService {
     private let session: URLSession
     private let baseURL = "https://typhoon.nmc.cn/weatherservice/typhoon/jsons"
+    private var snapshotCache: [Int: TyphoonSnapshot] = [:]
 
     init() {
         let configuration = URLSessionConfiguration.ephemeral
@@ -26,17 +25,55 @@ actor NMCService {
         session = URLSession(configuration: configuration)
     }
 
-    func fetchBavi() async throws -> TyphoonSnapshot {
-        let year = Calendar(identifier: .gregorian).component(.year, from: Date())
-        let listObject = try await fetchJSONP("\(baseURL)/list_\(year)?callback=typhoon_jsons_list_\(year)")
-        guard
-            let dictionary = listObject as? [String: Any],
-            let list = dictionary["typhoonList"] as? [[Any]],
-            let item = list.first(where: { row in
-                string(row, 1).uppercased() == "BAVI" && string(row, 7) == "start"
-            }),
-            let internalID = number(item, 0).map({ Int($0) })
-        else { throw NMCServiceError.noActiveBavi }
+    func fetchRecentTyphoons(since cutoff: Date) async throws -> [TyphoonSummary] {
+        let calendar = Calendar(identifier: .gregorian)
+        let currentYear = calendar.component(.year, from: Date())
+        let cutoffYear = calendar.component(.year, from: cutoff)
+        var summaries: [TyphoonSummary] = []
+        var listedTyphoonCount = 0
+        var loadedTyphoonCount = 0
+
+        for year in stride(from: currentYear, through: cutoffYear, by: -1) {
+            let listObject = try await fetchJSONP("\(baseURL)/list_\(year)?callback=typhoon_jsons_list_\(year)")
+            guard let dictionary = listObject as? [String: Any],
+                  let list = dictionary["typhoonList"] as? [[Any]] else {
+                throw NMCServiceError.malformedResponse
+            }
+            listedTyphoonCount += list.count
+
+            for item in list {
+                guard let internalID = number(item, 0).map({ Int($0) }) else { continue }
+                do {
+                    let snapshot = try await fetchTyphoon(id: internalID)
+                    loadedTyphoonCount += 1
+                    guard snapshot.issuedAt >= cutoff else { continue }
+                    summaries.append(TyphoonSummary(
+                        id: internalID,
+                        name: snapshot.name,
+                        englishName: snapshot.englishName,
+                        number: snapshot.number == "0" ? "" : snapshot.number,
+                        isActive: string(item, 7).lowercased() == "start",
+                        lastUpdated: snapshot.issuedAt,
+                        localActivity: nil
+                    ))
+                } catch {
+                    continue
+                }
+            }
+        }
+
+        if listedTyphoonCount > 0, loadedTyphoonCount == 0 {
+            throw NMCServiceError.missingTrack
+        }
+
+        return summaries.sorted { left, right in
+            if left.isActive != right.isActive { return left.isActive }
+            return left.lastUpdated > right.lastUpdated
+        }
+    }
+
+    func fetchTyphoon(id internalID: Int) async throws -> TyphoonSnapshot {
+        if let cached = snapshotCache[internalID] { return cached }
 
         let detailObject = try await fetchJSONP(
             "\(baseURL)/view_\(internalID)?callback=typhoon_jsons_view_\(internalID)"
@@ -46,7 +83,9 @@ actor NMCService {
             let typhoon = dictionary["typhoon"] as? [Any]
         else { throw NMCServiceError.malformedResponse }
 
-        return try parseTyphoon(typhoon)
+        let snapshot = try parseTyphoon(typhoon)
+        snapshotCache[internalID] = snapshot
+        return snapshot
     }
 
     private func fetchJSONP(_ address: String) async throws -> Any {
@@ -86,6 +125,7 @@ actor NMCService {
             englishName: string(data, 1),
             number: String(Int(number(data, 3) ?? 0)),
             current: current,
+            observedTrack: observed,
             recentTrack: recent,
             forecast: forecast,
             windRadii: radii,

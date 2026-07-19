@@ -67,7 +67,7 @@ struct TyphoonBarApp: App {
             Image(nsImage: .typhoonStatusIcon)
                 .resizable()
                 .frame(width: 22, height: 22)
-            .accessibilityLabel("巴威台风监测")
+            .accessibilityLabel("台风监测")
         }
         .menuBarExtraStyle(.window)
     }

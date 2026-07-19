@@ -1,6 +1,23 @@
 import Foundation
 import CoreLocation
 
+struct TyphoonSummary: Identifiable, Sendable {
+    let id: Int
+    let name: String
+    let englishName: String
+    let number: String
+    let isActive: Bool
+    let lastUpdated: Date
+    var localActivity: TyphoonLocalActivity?
+}
+
+struct TyphoonLocalActivity: Sendable {
+    let date: Date
+    let distance: Double
+
+    var hasNoticeableImpact: Bool { distance <= 800 }
+}
+
 struct TrackPoint: Identifiable, Sendable {
     let id = UUID()
     let date: Date
@@ -43,6 +60,7 @@ struct TyphoonSnapshot: Sendable {
     let englishName: String
     let number: String
     let current: TrackPoint
+    let observedTrack: [TrackPoint]
     let recentTrack: [TrackPoint]
     let forecast: [TrackPoint]
     let windRadii: [WindRadii]
