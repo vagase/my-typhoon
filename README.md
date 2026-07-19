@@ -22,15 +22,16 @@ TyphoonBar 是一个常驻 macOS 菜单栏的轻量台风监测工具：
 ## 界面预览
 
 <p align="center">
-  <img src="docs/images/main-panel.png" width="48%" alt="TyphoonBar 台风详情主面板">
-  <img src="docs/images/typhoon-picker.png" width="48%" alt="近三个月台风选择列表">
+  <a href="docs/images/app-store-showcase.jpg">
+    <img src="docs/images/app-store-showcase.jpg" width="100%" alt="TyphoonBar 主面板、近期台风列表与一切安好状态">
+  </a>
 </p>
 
 <p align="center">
-  <img src="docs/images/all-clear.png" width="48%" alt="没有活动台风时的一切安好状态">
+  <sub>路径与风圈 · 近期台风 · 一切安好</sub>
 </p>
 
-主面板展示路径、风圈和中心指标；选择列表补充状态、更新时间、当地主要影响日期与最近距离；没有活动台风时则显示简洁的“一切安好”状态。截图经过展示化裁切与背景清理，界面中的地图、系统符号、机构名称和气象数据仍分别受其提供方条款约束。素材说明见 [`docs/images/README.md`](docs/images/README.md)。
+主面板展示路径、风圈和中心指标；选择列表补充状态、更新时间、当地主要影响日期与最近距离；没有活动台风时则显示简洁的“一切安好”状态。截图中的地图、系统符号、机构名称和气象数据仍分别受其提供方条款约束。素材说明见 [`docs/images/README.md`](docs/images/README.md)。
 
 ## 项目状态
 

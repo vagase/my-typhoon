@@ -28,8 +28,9 @@
 - `docs/images/main-panel.png`
 - `docs/images/typhoon-picker.png`
 - `docs/images/all-clear.png`
+- `docs/images/app-store-showcase.jpg`
 
-这些图片使用 OpenAI 图像编辑工具移除窗口外的桌面、菜单栏和深色边缘，并添加浅色中性背景、留白和轻微阴影。项目维护者将其中自行创作的应用界面展示部分按 Apache License 2.0 提供。
+这些图片使用 OpenAI 图像编辑工具移除窗口外的桌面、菜单栏和深色边缘，并添加浅色中性背景、留白和轻微阴影；其中 `app-store-showcase.jpg` 进一步将三张界面图合成为横向展示板。项目维护者将其中自行创作的应用界面展示部分按 Apache License 2.0 提供。
 
 截图中出现的 Apple 地图与地图数据、SF Symbols、机构或服务名称、商标、气象数据及其署名不属于项目原创资源，也不受 Apache-2.0 覆盖。收录截图不表示项目获得上述第三方内容的再许可权，使用者仍需遵守相应提供方条款。
 
