@@ -43,7 +43,8 @@ TyphoonBar 是一个常驻 macOS 菜单栏的轻量台风监测工具：
 
 [下载 TyphoonBar for macOS](https://github.com/vagase/my-typhoon/releases/latest/download/TyphoonBar-macOS.zip) · [查看发布记录](https://github.com/vagase/my-typhoon/releases/latest) · [SHA-256 校验文件](https://github.com/vagase/my-typhoon/releases/latest/download/TyphoonBar-macOS.zip.sha256)
 
-当前 GitHub Release 产物采用临时签名，首次启动如果被系统拦截，可在 Finder 中右键应用并选择“打开”。
+> [!WARNING]
+> 当前 GitHub Release 使用临时签名，尚未经过 Apple 公证。首次启动若显示“TyphoonBar.app Not Opened”，请点击“完成”，再前往“系统设置 → 隐私与安全性 → 安全性”，选择“仍要打开 / Open Anyway”。不要全局关闭 Gatekeeper。详见[首次打开指南](docs/FIRST_LAUNCH.md)。
 
 ### 从源码构建
 
