@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 安全漏洞
+    url: https://github.com/vagase/my-typhoon/security/advisories/new
+    about: 请通过私密 Security Advisory 报告漏洞，不要公开敏感细节。
+  - name: 官方气象预警
+    url: https://www.nmc.cn/
+    about: 灾害性天气请查看中央气象台及所在地气象主管机构的最新信息。

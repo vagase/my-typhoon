@@ -1,0 +1,31 @@
+name: 功能建议
+description: 建议新的功能、数据源或体验改进
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 使用场景
+      description: 你希望解决什么问题？
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议方案
+      description: 描述期望的交互、数据或结果。
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: 数据源与许可
+      description: 如果涉及新数据源，请提供官方链接、许可证、署名要求和调用限制。
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我理解派生风险结果不能冒充官方预报或预警。
+          required: true
