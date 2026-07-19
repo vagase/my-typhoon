@@ -2,7 +2,7 @@
 
 TyphoonBar 当前是免费开源项目，GitHub Release 使用临时签名，尚未购买 Apple Developer Program，也没有经过 Apple 公证。因此，从浏览器下载后首次打开时，macOS 可能显示“Apple 无法验证 TyphoonBar.app 是否包含可能危害 Mac 或泄露隐私的恶意软件”。
 
-如果你从本项目的 [GitHub Releases](https://github.com/vagase/my-typhoon/releases) 下载，并确认校验值无误，可以使用 Apple 提供的单个应用放行方式：
+如果你从本项目的 [GitHub Releases](https://github.com/vagase/typhoonbar/releases) 下载，并确认校验值无误，可以使用 Apple 提供的单个应用放行方式：
 
 1. 在警告窗口点击“完成”，不要点击“移到废纸篓”；
 2. 打开“系统设置”→“隐私与安全性”；
