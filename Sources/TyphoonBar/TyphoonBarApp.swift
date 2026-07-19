@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 
+@MainActor
 extension NSImage {
     static let typhoonGlyphIcon: NSImage = {
         let image = NSImage(size: NSSize(width: 22, height: 22), flipped: false) { _ in
