@@ -3,6 +3,8 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![macOS](https://img.shields.io/badge/macOS-14%2B-black.svg)](https://www.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/Swift-6-orange.svg)](https://www.swift.org/)
+[![CI](https://github.com/vagase/my-typhoon/actions/workflows/ci.yml/badge.svg)](https://github.com/vagase/my-typhoon/actions/workflows/ci.yml)
+[![Latest Release](https://img.shields.io/github/v/release/vagase/my-typhoon?label=latest)](https://github.com/vagase/my-typhoon/releases/latest)
 
 ![TyphoonBar 项目插画](docs/images/typhoonbar-hero.png)
 
@@ -36,6 +38,14 @@ TyphoonBar 是一个常驻 macOS 菜单栏的轻量台风监测工具：
 
 ## 构建与运行
 
+### 下载最新版
+
+[下载 TyphoonBar for macOS](https://github.com/vagase/my-typhoon/releases/latest/download/TyphoonBar-macOS.zip) · [查看发布记录](https://github.com/vagase/my-typhoon/releases/latest) · [SHA-256 校验文件](https://github.com/vagase/my-typhoon/releases/latest/download/TyphoonBar-macOS.zip.sha256)
+
+当前 GitHub Release 产物采用临时签名，首次启动如果被系统拦截，可在 Finder 中右键应用并选择“打开”。
+
+### 从源码构建
+
 需要 macOS 14 或更高版本，以及 Xcode Command Line Tools。
 
 ```bash
@@ -44,7 +54,7 @@ chmod +x build_app.sh
 open dist/TyphoonBar.app
 ```
 
-首次启动如果被系统拦截，可在 Finder 中右键应用并选择“打开”。应用采用本机临时签名，不会显示 Dock 图标。
+应用不会显示 Dock 图标。版本发布流程见[发布指南](RELEASING.md)。
 
 ## 数据与限制
 
